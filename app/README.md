@@ -98,5 +98,5 @@ Sem Página do Candidato/B2B e sem banco de dados (Supabase).**
 - [x] **Dia 3** — pagamento via Stripe Checkout (pagamento único R$ 12,90) + desbloqueio HD sem marca d'água. Sem banco: o `session_id` pago vira uma licença assinada guardada no navegador; webhook manda o link por e-mail (Resend) e há recuperação por e-mail. **Pendente: ativar Pix no Dashboard do Stripe** (aparece sozinho no Checkout quando ativo) e preencher `RESEND_API_KEY`/`EMAIL_FROM`
 - ~~**Dia 4** — Página do Candidato (B2B)~~ — descartado
 - [x] **Dia 5** — compartilhamento WhatsApp/Instagram/copiar/menu nativo + 10 templates novos
-- [x] **Dia 6 (parcial)** — rascunho de termos/privacidade, meta tags OG (falta imagem OG e revisão jurídica)
+- [x] **Dia 6** — rascunho de termos/privacidade, meta tags OG + imagem OG gerada no build (`src/app/opengraph-image.tsx`). **Pendente: revisão jurídica**
 - [ ] **Dia 7** — domínio .com.br + deploy Vercel + lançamento
