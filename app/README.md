@@ -13,6 +13,17 @@ npm run dev     # http://localhost:3000
 npm run build   # build de produção (deploy: Vercel)
 ```
 
+## Deploy
+
+- **Produção:** https://votocard.vercel.app (projeto `votocard`, time `mirafranquicia-2132s-projects`)
+- **GitHub:** `mirafranquicia/eleicao` (remote SSH `github-franquia`, branch `main`); o app fica na
+  subpasta `app/`, então o projeto Vercel precisa de **Root Directory = `app`** para o deploy
+  automático via git funcionar.
+- Deploy manual: `cd app && npx vercel deploy --prod --yes`
+- Variáveis de produção já cadastradas: `STRIPE_SECRET_KEY`, `VOTOCARD_LICENSE_SECRET`,
+  `NEXT_PUBLIC_SITE_URL`. Faltam `STRIPE_WEBHOOK_SECRET` (gerar no endpoint de produção do
+  Stripe) e `RESEND_API_KEY`/`EMAIL_FROM`.
+
 ## Estrutura
 
 | Arquivo | O que faz |
