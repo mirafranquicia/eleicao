@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+
+const noopSubscribe = () => () => {};
 import { DEFAULT_PALETTE, PALETTES } from "@/lib/palettes";
 import { FORMATS, getFormat, type FormatId } from "@/lib/formats";
 import { TEMPLATES, getTemplate } from "@/lib/templates";
 import { hasBlockedWord } from "@/lib/filter";
 import { useLicense } from "@/lib/useLicense";
+import { canShareFiles, shareTo, type ShareTarget } from "@/lib/share";
 import {
   clampTransform,
   exportScene,
@@ -147,7 +150,9 @@ export default function Editor() {
 
   // Zoom pela roda do mouse sem rolar a página (listener não-passivo)
   const sceneRef = useRef(scene);
-  sceneRef.current = scene;
+  useEffect(() => {
+    sceneRef.current = scene;
+  }, [scene]);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !image) return;
@@ -163,33 +168,29 @@ export default function Editor() {
   // ------------------------------------------------------------------
   // Download / compartilhar
   // ------------------------------------------------------------------
-  const download = useCallback(async () => {
-    if (nameBlocked) return;
-    setBusy(true);
-    try {
-      await document.fonts?.ready;
-      const blob = await exportScene(scene);
-      const file = new File([blob], `votocard-${formatId}.png`, { type: "image/png" });
-      // share nativo só no celular; no desktop, download direto
-      const isTouch = window.matchMedia("(pointer: coarse)").matches;
-      if (isTouch && navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file] });
-          return;
-        } catch {
-          // usuário cancelou o share — cai para download
-        }
+  // Menu nativo de compartilhamento disponível? (celular, em geral). No servidor é sempre false.
+  const nativeShare = useSyncExternalStore(noopSubscribe, canShareFiles, () => false);
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
+
+  const share = useCallback(
+    async (target: ShareTarget) => {
+      if (nameBlocked || !image) return;
+      setBusy(true);
+      setShareMsg(null);
+      try {
+        await document.fonts?.ready;
+        const blob = await exportScene(scene);
+        const file = new File([blob], `votocard-${formatId}.png`, { type: "image/png" });
+        setShareMsg(await shareTo(target, file, window.location.origin));
+      } catch (e) {
+        setShareMsg(e instanceof Error ? e.message : "Falha ao gerar a imagem");
+      } finally {
+        setBusy(false);
       }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name;
-      a.click();
-      URL.revokeObjectURL(url);
-    } finally {
-      setBusy(false);
-    }
-  }, [scene, formatId, nameBlocked]);
+    },
+    [scene, formatId, nameBlocked, image]
+  );
+  const exportDisabled = busy || nameBlocked || !image;
 
   const format = getFormat(formatId);
   const votoTemplates = TEMPLATES.filter((t) => t.category === "voto");
@@ -228,12 +229,67 @@ export default function Editor() {
           </button>
           <button
             type="button"
-            onClick={download}
-            disabled={busy || nameBlocked}
+            onClick={() => share("download")}
+            disabled={exportDisabled}
             className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
           >
             {busy ? "Gerando…" : "⬇️ Baixar imagem"}
           </button>
+        </div>
+
+        {/* Compartilhar nas redes */}
+        <div className="w-full max-w-md">
+          <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Compartilhar
+          </p>
+          <div className={`grid gap-2 ${nativeShare ? "grid-cols-4" : "grid-cols-3"}`}>
+            <button
+              type="button"
+              onClick={() => share("whatsapp")}
+              disabled={exportDisabled}
+              className="flex flex-col items-center gap-1 rounded-xl bg-[#25D366] px-2 py-3 text-xs font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
+            >
+              <WhatsAppIcon />
+              WhatsApp
+            </button>
+            <button
+              type="button"
+              onClick={() => share("instagram")}
+              disabled={exportDisabled}
+              className="flex flex-col items-center gap-1 rounded-xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] px-2 py-3 text-xs font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
+            >
+              <InstagramIcon />
+              Instagram
+            </button>
+            <button
+              type="button"
+              onClick={() => share("copy")}
+              disabled={exportDisabled}
+              className="flex flex-col items-center gap-1 rounded-xl border border-zinc-300 bg-white px-2 py-3 text-xs font-semibold text-zinc-800 transition hover:bg-zinc-50 disabled:opacity-50"
+            >
+              <span className="text-xl leading-6">📋</span>
+              Copiar
+            </button>
+            {nativeShare && (
+              <button
+                type="button"
+                onClick={() => share("native")}
+                disabled={exportDisabled}
+                className="flex flex-col items-center gap-1 rounded-xl border border-zinc-300 bg-white px-2 py-3 text-xs font-semibold text-zinc-800 transition hover:bg-zinc-50 disabled:opacity-50"
+              >
+                <span className="text-xl leading-6">↗️</span>
+                Mais
+              </button>
+            )}
+          </div>
+          {!image && (
+            <p className="mt-2 text-center text-xs text-zinc-500">Escolha uma foto para baixar ou compartilhar.</p>
+          )}
+          {shareMsg && (
+            <p className="mt-2 rounded-lg bg-zinc-100 px-3 py-2 text-center text-xs text-zinc-700" role="status">
+              {shareMsg}
+            </p>
+          )}
         </div>
         <input
           ref={fileInputRef}
@@ -485,5 +541,23 @@ function TemplateChip({
     >
       {label}
     </button>
+  );
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+      <path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.3-.6-.4zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.1-1.3c1.5.8 3.1 1.3 4.9 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4 15.1 3.8 13.6 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2z" />
+    </svg>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
   );
 }

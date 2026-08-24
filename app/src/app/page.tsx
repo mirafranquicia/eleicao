@@ -60,8 +60,8 @@ export default function Home() {
                 },
                 {
                   n: "3",
-                  t: "Baixe e compartilhe",
-                  d: "Exporte em formato de perfil, story ou feed e poste no WhatsApp e Instagram.",
+                  t: "Compartilhe",
+                  d: "Exporte em formato de perfil, story ou feed e mande direto para o WhatsApp ou Instagram com um toque.",
                 },
               ].map((s) => (
                 <div key={s.n} className="rounded-2xl border border-zinc-200 p-5">
@@ -76,23 +76,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* B2B */}
-        <section className="mx-auto w-full max-w-5xl px-4 py-12">
-          <div className="rounded-2xl bg-emerald-700 p-6 text-white sm:p-10">
-            <h2 className="text-xl font-bold sm:text-2xl">É candidato ou marqueteiro?</h2>
-            <p className="mt-2 max-w-2xl text-sm text-emerald-50 sm:text-base">
-              Tenha uma <strong>Página do Candidato</strong> com molduras na identidade visual
-              oficial da sua campanha, para distribuir nos grupos de WhatsApp da militância. Cada
-              apoiador que gera uma imagem espalha a sua campanha.
-            </p>
-            <a
-              href="mailto:ecossistemamira@gmail.com?subject=P%C3%A1gina%20do%20Candidato%20%E2%80%94%20VotoCard"
-              className="mt-4 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
-            >
-              Quero saber mais
-            </a>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}

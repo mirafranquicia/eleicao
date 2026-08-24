@@ -24,13 +24,7 @@ export default function Termos() {
           conteúdo ofensivo, difamatório ou que viole direitos de terceiros.
         </p>
         <p>
-          <strong>4. Material de campanha (B2B).</strong> Nas Páginas do Candidato, todo material de
-          identidade visual é fornecido e autorizado pela própria campanha contratante, que se
-          responsabiliza pela sua regularidade e pela declaração de gastos perante a Justiça
-          Eleitoral.
-        </p>
-        <p>
-          <strong>5. Privacidade.</strong> As fotos dos usuários são processadas exclusivamente no
+          <strong>4. Privacidade.</strong> As fotos dos usuários são processadas exclusivamente no
           navegador e nunca são enviadas aos nossos servidores. Veja a{" "}
           <Link href="/privacidade" className="underline">
             política de privacidade
