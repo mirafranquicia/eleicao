@@ -7,7 +7,13 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+// Base para as URLs absolutas de og:image etc. (produção > URL da Vercel > dev)
+const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || (vercelUrl ? `https://${vercelUrl}` : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "VotoCard — Sua foto de perfil eleitoral em 30 segundos",
   description:
     "Declare seu voto com estilo: molduras personalizadas sobre a sua própria foto, direto no navegador. Sua foto não sai do seu celular. Eleições 2026.",
@@ -18,6 +24,7 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     type: "website",
   },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
